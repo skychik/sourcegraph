@@ -53,7 +53,7 @@ const configureOmnibox = (serverUrl: string) => {
     })
 }
 
-const queryGraphQL: PlatformContext['queryGraphQL'] = (request, variables, mightContainPrivateInfo) =>
+const queryGraphQL: PlatformContext['requestGraphQL'] = (request, variables, mightContainPrivateInfo) =>
     storage.observeSync('sourcegraphURL').pipe(
         take(1),
         switchMap(baseUrl => {

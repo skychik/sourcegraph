@@ -16,7 +16,7 @@ export const requestOptions: GraphQLRequestOptions = {
 /**
  * Performs a graphQL request from the extension's background page.
  */
-export const queryGraphQLFromBackground: PlatformContext['queryGraphQL'] = (
+export const queryGraphQLFromBackground: PlatformContext['requestGraphQL'] = (
     request,
     variables,
     mightContainPrivateInfo

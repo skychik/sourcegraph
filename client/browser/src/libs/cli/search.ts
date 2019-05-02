@@ -15,7 +15,7 @@ export class SearchCommand {
 
     private prev: { query: string; suggestions: chrome.omnibox.SuggestResult[] } = { query: '', suggestions: [] }
 
-    constructor(private queryGraphQL: PlatformContext['queryGraphQL']) {}
+    constructor(private queryGraphQL: PlatformContext['requestGraphQL']) {}
 
     public getSuggestions = (query: string): Promise<chrome.omnibox.SuggestResult[]> =>
         new Promise(resolve => {

@@ -4,7 +4,7 @@ import { SearchCommand } from './search'
 
 export default function initialize(
     { onInputEntered, onInputChanged }: typeof omnibox,
-    queryGraphQL: PlatformContext['queryGraphQL']
+    queryGraphQL: PlatformContext['requestGraphQL']
 ): void {
     const searchCommand = new SearchCommand(queryGraphQL)
     onInputChanged((query, suggest) => {
