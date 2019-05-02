@@ -4,8 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"math"
 	"net/url"
+	"runtime/debug"
 	"time"
 
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/authz"
@@ -60,6 +62,8 @@ func (p *Provider) Repos(ctx context.Context, repos map[authz.Repo]struct{}) (mi
 // If not, then the info is computed by querying the GitHub API. A separate query is issued for each
 // repository (and for each user for the explicit case).
 func (p *Provider) RepoPerms(ctx context.Context, userAccount *extsvc.ExternalAccount, repos map[authz.Repo]struct{}) (map[api.RepoName]map[authz.Perm]bool, error) {
+	log.Printf("# RepoPerms %d", len(repos))
+	debug.PrintStack()
 	remaining, _ := p.Repos(ctx, repos)
 	remainingPublic := remaining
 	if len(remaining) == 0 {
@@ -231,6 +235,7 @@ func (p *Provider) fetchAndSetUserRepos(ctx context.Context, userAccount *extsvc
 	userRepos := make(map[string]bool)
 	publicRepos := make(map[string]bool)
 	for r := range repos {
+		// log.Printf("# fetchUserRepo %v", r.ExternalRepoSpec)
 		canAccess, isPublic, err := p.fetchUserRepo(ctx, userAccount, r.ExternalRepoSpec.ID)
 		if err != nil {
 			return nil, err
