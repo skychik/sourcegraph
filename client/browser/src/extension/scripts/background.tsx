@@ -8,7 +8,7 @@ import { fromEventPattern, noop, Observable, throwError } from 'rxjs'
 import { bufferCount, filter, groupBy, map, mergeMap, switchMap, take } from 'rxjs/operators'
 import DPT from 'webext-domain-permission-toggle'
 import { createExtensionHostWorker } from '../../../../../shared/src/api/extension/worker'
-import { gql, requestGraphQL } from '../../../../../shared/src/graphql/graphql'
+import { gql, requestGraphQL as requestGraphQLCommon } from '../../../../../shared/src/graphql/graphql'
 import { PlatformContext } from '../../../../../shared/src/platform/context'
 import * as browserAction from '../../browser/browserAction'
 import * as omnibox from '../../browser/omnibox'
@@ -53,14 +53,14 @@ const configureOmnibox = (serverUrl: string) => {
     })
 }
 
-const queryGraphQL: PlatformContext['requestGraphQL'] = (request, variables, mightContainPrivateInfo) =>
+const requestGraphQL: PlatformContext['requestGraphQL'] = (request, variables, mightContainPrivateInfo) =>
     storage.observeSync('sourcegraphURL').pipe(
         take(1),
         switchMap(baseUrl => {
             if (mightContainPrivateInfo && baseUrl === DEFAULT_SOURCEGRAPH_URL) {
                 return throwError(new PrivateRepoPublicSourcegraphComError('query'))
             }
-            return requestGraphQL({
+            return requestGraphQLCommon({
                 request: gql`
                     ${request}
                 `,
@@ -71,7 +71,7 @@ const queryGraphQL: PlatformContext['requestGraphQL'] = (request, variables, mig
         })
     ) as any // TODO(lguychard) remove any cast
 
-initializeCli(omnibox, queryGraphQL)
+initializeCli(omnibox, requestGraphQL)
 
 storage.getSync(({ sourcegraphURL }) => {
     // If no sourcegraphURL is set ensure we default back to https://sourcegraph.com.
@@ -80,7 +80,7 @@ storage.getSync(({ sourcegraphURL }) => {
         setSourcegraphUrl(DEFAULT_SOURCEGRAPH_URL)
     }
 
-    resolveClientConfiguration(queryGraphQL).subscribe(
+    resolveClientConfiguration(requestGraphQL).subscribe(
         config => {
             // ClientConfiguration is the new storage option.
             // Request permissions for the urls.
@@ -126,7 +126,7 @@ storage.onChanged((changes, areaName) => {
 
     if (changes.sourcegraphURL && changes.sourcegraphURL.newValue) {
         setSourcegraphUrl(changes.sourcegraphURL.newValue)
-        resolveClientConfiguration(queryGraphQL).subscribe(
+        resolveClientConfiguration(requestGraphQL).subscribe(
             config => {
                 // ClientConfiguration is the new storage option.
                 // Request permissions for the urls.
@@ -295,7 +295,7 @@ runtime.onMessage((message, _, cb) => {
             return true
         case 'requestGraphQL':
             const { request, variables, mightContainPrivateInfo } = message.payload
-            queryGraphQL(
+            requestGraphQL(
                 gql`
                     ${request}
                 `,

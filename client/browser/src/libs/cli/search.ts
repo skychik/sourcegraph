@@ -11,11 +11,11 @@ const isURL = /^https?:\/\//
 export class SearchCommand {
     public description = 'Enter a search query'
 
-    private suggestionFetcher = createSuggestionFetcher(20, this.queryGraphQL)
+    private suggestionFetcher = createSuggestionFetcher(20, this.requestGraphQL)
 
     private prev: { query: string; suggestions: chrome.omnibox.SuggestResult[] } = { query: '', suggestions: [] }
 
-    constructor(private queryGraphQL: PlatformContext['requestGraphQL']) {}
+    constructor(private requestGraphQL: PlatformContext['requestGraphQL']) {}
 
     public getSuggestions = (query: string): Promise<chrome.omnibox.SuggestResult[]> =>
         new Promise(resolve => {
