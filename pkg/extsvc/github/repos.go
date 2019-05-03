@@ -335,9 +335,10 @@ func (c *Client) GetRepositoriesByNodeIDFromAPI(ctx context.Context, token strin
 
 	///////////////////////////
 
-	var result struct {
-		Nodes [][2]string
-	}
+	// var result struct {
+	// 	Nodes [][2]string
+	// }
+	var result map[string]interface{}
 	err := c.requestGraphQL(ctx, token, `
 query Repositories($ids: [ID!]!) {
 	nodes(ids: $ids) {
@@ -357,9 +358,9 @@ query Repositories($ids: [ID!]!) {
 		}
 		return nil, err
 	}
-	if result.Nodes == nil {
-		return nil, ErrNotFound
-	}
+	// if result.Nodes == nil {
+	// 	return nil, ErrNotFound
+	// }
 
 	log.Printf("# result: %+v", result)
 

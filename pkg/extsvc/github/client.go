@@ -242,7 +242,7 @@ func (c *Client) requestGet(ctx context.Context, token, requestURI string, resul
 }
 
 func (c *Client) requestGraphQL(ctx context.Context, token, query string, vars map[string]interface{}, result interface{}) (err error) {
-	log.Printf("# requestGraphQL")
+	// log.Printf("# requestGraphQL")
 	reqBody, err := json.Marshal(struct {
 		Query     string                 `json:"query"`
 		Variables map[string]interface{} `json:"variables"`
@@ -253,7 +253,9 @@ func (c *Client) requestGraphQL(ctx context.Context, token, query string, vars m
 	if err != nil {
 		return err
 	}
-	// log.Printf("# reqBody: %v", string(reqBody))
+	if strings.Contains(string(reqBody), "Repositories") {
+		log.Printf("# reqBody: %v", string(reqBody))
+	}
 	req, err := http.NewRequest("POST", "/graphql", bytes.NewReader(reqBody))
 	if err != nil {
 		return err
