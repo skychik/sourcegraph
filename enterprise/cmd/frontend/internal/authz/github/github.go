@@ -7,7 +7,6 @@ import (
 	"log"
 	"math"
 	"net/url"
-	"runtime/debug"
 	"time"
 
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/authz"
@@ -62,8 +61,8 @@ func (p *Provider) Repos(ctx context.Context, repos map[authz.Repo]struct{}) (mi
 // If not, then the info is computed by querying the GitHub API. A separate query is issued for each
 // repository (and for each user for the explicit case).
 func (p *Provider) RepoPerms(ctx context.Context, userAccount *extsvc.ExternalAccount, repos map[authz.Repo]struct{}) (map[api.RepoName]map[authz.Perm]bool, error) {
-	log.Printf("# RepoPerms %d", len(repos))
-	debug.PrintStack()
+	// log.Printf("# RepoPerms %d", len(repos))
+	// debug.PrintStack()
 	remaining, _ := p.Repos(ctx, repos)
 	remainingPublic := remaining
 	if len(remaining) == 0 {
@@ -232,6 +231,18 @@ func (p *Provider) fetchAndSetUserRepos(ctx context.Context, userAccount *extsvc
 		return nil, nil
 	}
 
+	repoIDs := make([]string, len(repos))
+	i := 0
+	for repo := range repos {
+		repoIDs[i] = repo.ID
+		i++
+	}
+
+	///////////////
+	canAccess, isPublic, err := p.fetchUserRepos(ctx, userAccount, repoIDs)
+	log.Printf("# canAccess: %v, isPublic: %v, err: %v", canAccess, isPublic, err)
+	///////////////
+
 	userRepos := make(map[string]bool)
 	publicRepos := make(map[string]bool)
 	for r := range repos {
@@ -318,6 +329,22 @@ func (p *Provider) getCachedUserRepos(ctx context.Context, userAccount *extsvc.E
 		cachedIsAllowed[repoList[i]] = val.Read
 	}
 	return cachedIsAllowed, nil
+}
+
+func (p *Provider) fetchUserRepos(ctx context.Context, userAccount *extsvc.ExternalAccount, repoIDs []string) (canAccess map[string]bool, isPublic map[string]bool, err error) {
+	log.Printf("# fetchUserRepos")
+	_, tok, err := github.GetExternalAccountData(&userAccount.ExternalAccountData)
+	if err != nil {
+		return nil, nil, err
+	}
+	ghRepos, err := p.client.GetRepositoriesByNodeIDFromAPI(ctx, tok.AccessToken, repoIDs)
+	if err != nil {
+		return nil, nil, err
+	}
+	log.Printf("# ghRepos: %v", ghRepos)
+
+	// TODO(beyang)
+	return nil, nil, nil
 }
 
 // fetchUserRepo fetches whether the given user can access the given repo from the GitHub API.

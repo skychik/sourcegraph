@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/url"
 	"strconv"
 	"strings"
@@ -323,6 +324,58 @@ query Repository($id: ID!) {
 		return nil, ErrNotFound
 	}
 	return result.Node, nil
+}
+
+// GetRepositoriesByNodeIDFromAPI fetches the specified repositories (nodeIDs) and returns a map
+// from node ID to repository metadata. If a repository is not found, it will not be present in the
+// return map.
+func (c *Client) GetRepositoriesByNodeIDFromAPI(ctx context.Context, token string, nodeIDs []string) (map[string]*Repository, error) {
+	log.Printf("#####  GetRepositoriesByNodeIDFromAPI")
+	x := []string{"MDEwOlJlcG9zaXRvcnk4ODkxMTg2", "asdf", "MDEwOlJlcG9zaXRvcnk4OTc4OTg0", "MDEwOlJlcG9zaXRvcnkxMDc3MzM1Nw==", "MDEwOlJlcG9zaXRvcnkxMTMwMzAxMA=="}
+
+	///////////////////////////
+
+	var result struct {
+		Nodes [][2]string
+	}
+	err := c.requestGraphQL(ctx, token, `
+query Repositories($ids: [ID!]!) {
+	nodes(ids: $ids) {
+		... on Repository {
+			...RepositoryFields
+		}
+	}
+}
+`+c.repositoryFieldsGraphQLFragment(), map[string]interface{}{"ids": x}, &result)
+	if err != nil {
+		if gqlErrs, ok := err.(graphqlErrors); ok {
+			for _, err2 := range gqlErrs {
+				if err2.Type == graphqlErrTypeNotFound {
+					return nil, ErrNotFound
+				}
+			}
+		}
+		return nil, err
+	}
+	if result.Nodes == nil {
+		return nil, ErrNotFound
+	}
+
+	log.Printf("# result: %+v", result)
+
+	// 	repoCmps := make([]string, 0, len(nodeIDs))
+	// 	vars := make(map[string]interface{})
+	// 	for i, nodeID := range nodeIDs {
+	// 		snippet := fmt.Sprintf(`	node(id: $id_%d) {
+	// 		... on Repository {
+	// 			...RepositoryFields
+	// 		}
+	// 	}
+	// `, i)
+	// 		repoCmps = append(repoCmps, snippet)
+	// 	}
+
+	return nil, nil
 }
 
 func (c *Client) ListPublicRepositories(ctx context.Context, sinceRepoID int64) ([]*Repository, error) {
