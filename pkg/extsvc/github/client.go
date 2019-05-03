@@ -253,9 +253,9 @@ func (c *Client) requestGraphQL(ctx context.Context, token, query string, vars m
 	if err != nil {
 		return err
 	}
-	if strings.Contains(string(reqBody), "Repositories") {
-		log.Printf("# reqBody: %v", string(reqBody))
-	}
+	// if strings.Contains(string(reqBody), "Repositories") {
+	// 	log.Printf("# reqBody: %v", string(reqBody))
+	// }
 	req, err := http.NewRequest("POST", "/graphql", bytes.NewReader(reqBody))
 	if err != nil {
 		return err
@@ -267,6 +267,12 @@ func (c *Client) requestGraphQL(ctx context.Context, token, query string, vars m
 	if err := c.do(ctx, token, req, &respBody); err != nil {
 		return err
 	}
+	///////////////////////////////////////////////////////////
+	// NEXT
+	if strings.Contains(string(reqBody), "Repositories") {
+		log.Printf("# respBody: %v", string([]byte(respBody.Data)))
+	}
+	///////////////////////////////////////////////////////////
 	if len(respBody.Errors) > 0 {
 		return respBody.Errors
 	}
@@ -356,9 +362,9 @@ func IsRateLimitExceeded(err error) bool {
 // graphqlErrors describes the errors in a GraphQL response. It contains at least 1 element when returned by
 // requestGraphQL. See https://facebook.github.io/graphql/#sec-Errors.
 type graphqlErrors []struct {
-	Message   string   `json:"message"`
-	Type      string   `json:"type"`
-	Path      []string `json:"path"`
+	Message   string        `json:"message"`
+	Type      string        `json:"type"`
+	Path      []interface{} `json:"path"`
 	Locations []struct {
 		Line   int `json:"line"`
 		Column int `json:"column"`

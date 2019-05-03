@@ -330,10 +330,8 @@ query Repository($id: ID!) {
 // from node ID to repository metadata. If a repository is not found, it will not be present in the
 // return map.
 func (c *Client) GetRepositoriesByNodeIDFromAPI(ctx context.Context, token string, nodeIDs []string) (map[string]*Repository, error) {
-	log.Printf("#####  GetRepositoriesByNodeIDFromAPI")
-	x := []string{"MDEwOlJlcG9zaXRvcnk4ODkxMTg2", "asdf", "MDEwOlJlcG9zaXRvcnk4OTc4OTg0", "MDEwOlJlcG9zaXRvcnkxMDc3MzM1Nw==", "MDEwOlJlcG9zaXRvcnkxMTMwMzAxMA=="}
 
-	///////////////////////////
+	nodeIDs = nodeIDs[:100] // TODO: have client batch
 
 	// var result struct {
 	// 	Nodes [][2]string
@@ -347,16 +345,18 @@ query Repositories($ids: [ID!]!) {
 		}
 	}
 }
-`+c.repositoryFieldsGraphQLFragment(), map[string]interface{}{"ids": x}, &result)
+`+c.repositoryFieldsGraphQLFragment(), map[string]interface{}{"ids": nodeIDs}, &result)
 	if err != nil {
 		if gqlErrs, ok := err.(graphqlErrors); ok {
 			for _, err2 := range gqlErrs {
 				if err2.Type == graphqlErrTypeNotFound {
-					return nil, ErrNotFound
+					continue
 				}
+				return nil, err
 			}
+		} else {
+			return nil, err
 		}
-		return nil, err
 	}
 	// if result.Nodes == nil {
 	// 	return nil, ErrNotFound
