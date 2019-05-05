@@ -3,10 +3,12 @@ import * as React from 'react'
 import { action } from '@storybook/addon-actions'
 import { storiesOf } from '@storybook/react'
 
-import '../global.scss'
+import '../../app.scss'
 
 import { interval, Subscription } from 'rxjs'
-import { ConnectionErrors, ServerURLForm, ServerURLFormProps } from '../../src/libs/options/ServerURLForm'
+import { ConnectionErrors, ServerURLForm, ServerURLFormProps } from './ServerURLForm'
+
+// tslint:disable: jsx-no-lambda
 
 class Container extends React.Component<{}, { value: string; status: ServerURLFormProps['status'] }> {
     public state = { value: 'https://sourcegraph.com', status: 'connected' as ServerURLFormProps['status'] }
@@ -14,7 +16,13 @@ class Container extends React.Component<{}, { value: string; status: ServerURLFo
     public render(): React.ReactNode {
         return (
             <div style={{ maxWidth: 400 }}>
-                <ServerURLForm {...this.state} onChange={this.onChange} onSubmit={this.onSubmit} />
+                <ServerURLForm
+                    {...this.state}
+                    onChange={this.onChange}
+                    onSubmit={this.onSubmit}
+                    requestPermissions={() => void 0}
+                    urlHasPermissions={true}
+                />
             </div>
         )
     }
@@ -72,6 +80,8 @@ class CyclingStatus extends React.Component<{}, { step: number }> {
                     onChange={this.onChange}
                     onSubmit={this.onSubmit}
                     overrideUpdatingState={isUpdating}
+                    requestPermissions={() => void 0}
+                    urlHasPermissions={true}
                 />
             </div>
         )
@@ -89,6 +99,8 @@ storiesOf('Options - ServerURLForm', module)
                 connectionError={ConnectionErrors.AuthError}
                 onChange={action('Change')}
                 onSubmit={action('Submit')}
+                requestPermissions={() => void 0}
+                urlHasPermissions={true}
             />
         </div>
     ))
